@@ -26,17 +26,14 @@ module GoogleOauth2Model
       raise NoRefreshTokenError unless oauth2_refresh_token
       return access_token unless expired?
       @access_token = access_token.refresh!.tap do |new_token|
-        # Statsd.increment('mailstrom.oauth2.success_response')
         owner.google_access_credentials!(token: new_token.token, expires_at: new_token.expires_at)
       end
     rescue OAuth2::Error => ex
-      # do something here? the refresh *did* fail
-      # maybe nix refresh token and have the user re-auth when they come back?
-      # I don't like throwing away data that might still be working though
-      # log it for now
+      # Should we do something here? The refresh *did* fail.
+      # (I don't like throwing away data that might still be working though)
       if ex.message.starts_with?('invalid_grant')
-        # Statsd.increment('mailstrom.oauth2.invalid_grant_response')
-        owner.update_attribute(:oauth2_refresh_token, nil) unless valid? # nix the refresh token, puts them in a needs_reauth?-positive state
+        # nix the current refresh token, which puts them in a needs_reauth?-positive state
+        owner.update_attribute(:oauth2_refresh_token, nil) unless valid?
       end
       raise
     end
@@ -57,7 +54,6 @@ module GoogleOauth2Model
                                      :token_url     => '/o/oauth2/token')
     end
 
-
     def tokeninfo
       response = Faraday.get 'https://www.googleapis.com/oauth2/v1/tokeninfo?access_token=' + URI.encode(oauth2_token)
       JSON.load(response.body)
@@ -75,7 +71,6 @@ module GoogleOauth2Model
 
       def google_access_credentials!(creds)
         creds = creds.with_indifferent_access
-        expires_at = creds.fetch(:expires_at)
         new_attributes = {
           oauth2_token: creds.fetch(:token),
           oauth2_token_expires_at: Time.at(creds.fetch(:expires_at))
