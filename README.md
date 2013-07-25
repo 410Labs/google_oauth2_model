@@ -1,4 +1,6 @@
 # google_oauth2_model
+[![Build Status](https://travis-ci.org/410Labs/google_oauth2_model.png?branch=master)](https://travis-ci.org/410Labs/google_oauth2_model)
+[![Dependency Status](https://gemnasium.com/410Labs/google_oauth2_model.png)](https://gemnasium.com/410Labs/google_oauth2_model)
 
 Allow a model to store google oauth2 access and refresh tokens.
 
